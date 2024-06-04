@@ -77,7 +77,9 @@ resource "aws_lambda_function" "hello_world" {
   runtime       = "nodejs20.x"
   filename      = "lambda/hello_world.zip"
   role          = aws_iam_role.lambda_exec_role.arn
+  memory_size   = 512
 }
+
 
 resource "aws_lambda_function" "sfn_executor" {
   function_name = "SfnExecutor"
@@ -85,6 +87,7 @@ resource "aws_lambda_function" "sfn_executor" {
   runtime       = "nodejs20.x"
   filename      = "lambda/sfn_executor.zip"
   role          = aws_iam_role.lambda_exec_role.arn
+  timeout       = 15
 }
 
 ####################################
