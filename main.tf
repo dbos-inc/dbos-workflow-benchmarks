@@ -94,8 +94,8 @@ resource "aws_lambda_function" "sfn_executor" {
 ### Step Functions
 ####################################
 
-resource "aws_sfn_state_machine" "hello_world_workflow" {
-  name     = "HelloWorldWorkflow"
+resource "aws_sfn_state_machine" "hello_world_standard_workflow" {
+  name     = "BenchmarkStandardWorkflow"
   role_arn = aws_iam_role.sfn_exec_role.arn
 
   definition = jsonencode({
@@ -159,6 +159,15 @@ resource "aws_sfn_state_machine" "hello_world_workflow" {
       }
     }
   })
+}
+
+resource "aws_sfn_state_machine" "hello_world_express_workflow" {
+  name     = "BenchmarkExpressWorkflow"
+  role_arn = aws_iam_role.sfn_exec_role.arn
+
+  definition = aws_sfn_state_machine.hello_world_standard_workflow.definition
+
+  type = "EXPRESS"
 }
 
 ####################################

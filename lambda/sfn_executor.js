@@ -6,7 +6,7 @@ const client = new SFNClient({ region: "us-east-1" });
 exports.handler = async (event) => {
     // Parameters for starting the Step Functions execution
     const startParams = {
-        stateMachineArn: "arn:aws:states:us-east-1:500883621673:stateMachine:HelloWorldWorkflow",
+        stateMachineArn: "arn:aws:states:us-east-1:500883621673:stateMachine:BenchmarkStandardWorkflow",
         input: JSON.stringify(event)  // Pass event data as input to the Step Functions
     };
 
