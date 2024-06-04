@@ -27,6 +27,11 @@ resource "aws_iam_role_policy_attachment" "lambda_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+resource "aws_iam_role_policy_attachment" "lambda_sfn_policy_attachment" {
+  role       = aws_iam_role.lambda_exec_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSStepFunctionsFullAccess"
+}
+
 resource "aws_iam_role" "sfn_exec_role" {
   name = "sfn_execution_role"
 
@@ -71,6 +76,14 @@ resource "aws_lambda_function" "hello_world" {
   handler       = "hello_world.handler"
   runtime       = "nodejs20.x"
   filename      = "lambda/hello_world.zip"
+  role          = aws_iam_role.lambda_exec_role.arn
+}
+
+resource "aws_lambda_function" "sfn_executor" {
+  function_name = "SfnExecutor"
+  handler       = "sfn_executor.handler"
+  runtime       = "nodejs20.x"
+  filename      = "lambda/sfn_executor.zip"
   role          = aws_iam_role.lambda_exec_role.arn
 }
 
@@ -143,8 +156,6 @@ resource "aws_sfn_state_machine" "hello_world_workflow" {
       }
     }
   })
-
-  type = "EXPRESS"
 }
 
 ####################################
