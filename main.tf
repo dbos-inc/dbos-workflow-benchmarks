@@ -23,24 +23,12 @@ resource "aws_iam_role_policy_attachment" "lambda_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-resource "null_resource" "trigger_upload" {
-  triggers = {
-    zip_last_modified = filemd5("${path.module}/lambda/hello_world.zip")
-  }
-
-  provisioner "local-exec" {
-    command = "echo Re-uploading Lambda function due to changes"
-  }
-}
-
 resource "aws_lambda_function" "hello_world" {
   function_name = "HelloWorldFunction"
   handler       = "hello_world.handler"
   runtime       = "nodejs20.x"
   filename      = "lambda/hello_world.zip"
-
-  role       = aws_iam_role.lambda_exec_role.arn
-  depends_on = [null_resource.trigger_upload]
+  role          = aws_iam_role.lambda_exec_role.arn
 }
 
 resource "aws_api_gateway_rest_api" "lambda_api" {
