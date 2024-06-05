@@ -152,7 +152,6 @@ resource "aws_sfn_state_machine" "lambda_transaction_standard_workflow" {
   })
 }
 
-
 resource "aws_sfn_state_machine" "lambda_transaction_express_workflow" {
   name     = "BenchmarkExpressWorkflow"
   role_arn = aws_iam_role.sfn_exec_role.arn
