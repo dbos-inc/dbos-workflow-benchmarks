@@ -6,6 +6,7 @@ provider "aws" {
 ### Lambda IAM Roles
 ####################################
 
+# IAM role for the Lambdas
 resource "aws_iam_role" "lambda_exec_role" {
   name = "lambda_execution_role"
 
@@ -22,11 +23,13 @@ resource "aws_iam_role" "lambda_exec_role" {
   })
 }
 
+# Give the Lambdas permission to write logs
 resource "aws_iam_role_policy_attachment" "lambda_policy" {
   role       = aws_iam_role.lambda_exec_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+# Give the Lambdas permission to manage Step Functions
 resource "aws_iam_role_policy_attachment" "lambda_sfn_policy_attachment" {
   role       = aws_iam_role.lambda_exec_role.name
   policy_arn = "arn:aws:iam::aws:policy/AWSStepFunctionsFullAccess"
@@ -36,6 +39,7 @@ resource "aws_iam_role_policy_attachment" "lambda_sfn_policy_attachment" {
 ### Step Functions IAM Roles
 ####################################
 
+# IAM role for the Step Functions
 resource "aws_iam_role" "sfn_exec_role" {
   name = "sfn_execution_role"
 
@@ -52,6 +56,7 @@ resource "aws_iam_role" "sfn_exec_role" {
   })
 }
 
+# Give the Step Functions permission to invoke Lambdas
 resource "aws_iam_role_policy" "sfn_exec_policy" {
   role = aws_iam_role.sfn_exec_role.id
 
@@ -75,6 +80,7 @@ resource "aws_iam_role_policy" "sfn_exec_policy" {
 ### Lambda
 ####################################
 
+# A Lambda function that performs a database transaction
 resource "aws_lambda_function" "lambda_transaction" {
   function_name = "LambdaTransaction"
   handler       = "index.handler"
@@ -84,6 +90,7 @@ resource "aws_lambda_function" "lambda_transaction" {
   memory_size   = 512
 }
 
+# A Lambda function that executes the standard workflow and returns its execution duration
 resource "aws_lambda_function" "sfn_executor" {
   function_name = "SfnExecutor"
   handler       = "sfn_executor.handler"
@@ -97,26 +104,36 @@ resource "aws_lambda_function" "sfn_executor" {
 ### Step Functions
 ####################################
 
+# A Step Functions standard workflow that calls LambdaTransaction steps times
 resource "aws_sfn_state_machine" "lambda_transaction_standard_workflow" {
   name     = "BenchmarkStandardWorkflow"
   role_arn = aws_iam_role.sfn_exec_role.arn
 
   definition = jsonencode({
-    Comment : "A Step Functions state machine that calls Lambda twice",
-    StartAt : "CallLambda1",
+    Comment : "A Step Functions state machine that calls Lambda steps times",
+    StartAt : "Initialize",
     States : {
-      CallLambda1 : {
-        Type : "Task",
-        Resource : aws_lambda_function.lambda_transaction.arn,
+      Initialize : {
+        Type : "Pass",
         Parameters : {
-          "hostname.$" : "$.hostname",
-          "username.$" : "$.username",
-          "password.$" : "$.password"
+          "currentIndex" : 0,
+          "totalSteps.$" : "$.steps"
         },
-        ResultPath : "$.lambda1result",
-        Next : "CallLambda2"
+        ResultPath : "$.iterator",
+        Next : "Loop"
       },
-      CallLambda2 : {
+      Loop : {
+        Type : "Choice",
+        Choices : [
+          {
+            Variable : "$.iterator.currentIndex",
+            NumericLessThanPath : "$.iterator.totalSteps",
+            Next : "CallLambda"
+          }
+        ],
+        Default : "Done"
+      },
+      CallLambda : {
         Type : "Task",
         Resource : aws_lambda_function.lambda_transaction.arn,
         Parameters : {
@@ -124,13 +141,26 @@ resource "aws_sfn_state_machine" "lambda_transaction_standard_workflow" {
           "username.$" : "$.username",
           "password.$" : "$.password"
         },
-        ResultPath : "$.lambda2result",
-        End : true
+        ResultPath : "$.lambdaResult",
+        Next : "IncrementIndex"
+      },
+      IncrementIndex : {
+        Type : "Pass",
+        Parameters : {
+          "currentIndex.$" : "States.MathAdd($.iterator.currentIndex, 1)",
+          "totalSteps.$" : "$.iterator.totalSteps"
+        },
+        ResultPath : "$.iterator",
+        Next : "Loop"
+      },
+      Done : {
+        Type : "Succeed"
       }
     }
   })
 }
 
+# A Step Functions express workflow that calls LambdaTransaction steps times
 resource "aws_sfn_state_machine" "lambda_transaction_express_workflow" {
   name     = "BenchmarkExpressWorkflow"
   role_arn = aws_iam_role.sfn_exec_role.arn
