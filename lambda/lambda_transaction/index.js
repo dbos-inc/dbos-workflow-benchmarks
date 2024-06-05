@@ -1,20 +1,26 @@
 const { Client } = require('pg');
 
+let client;
+
+const connectToDatabase = async (hostname, username, password) => {
+    if (!client) {
+        client = new Client({
+            host: hostname,
+            user: username,
+            password: password,
+            database: "dbos_benchmark",
+            ssl: { rejectUnauthorized: false }
+        });
+        await client.connect();
+    }
+};
+
 exports.handler = async (event) => {
     const { hostname, username, password } = event;
 
-    const client = new Client({
-        host: hostname,
-        user: username,
-        password: password,
-        database: "dbos_benchmark",
-        ssl: { rejectUnauthorized: false }
-    });
-
     try {
-        await client.connect();
+        await connectToDatabase(hostname, username, password);
         const res = await client.query('SELECT 1');
-        await client.end();
 
         const response = {
             statusCode: 200,
