@@ -80,7 +80,6 @@ resource "aws_lambda_function" "lambda_transaction" {
   memory_size   = 512
 }
 
-
 resource "aws_lambda_function" "sfn_executor" {
   function_name = "SfnExecutor"
   handler       = "sfn_executor.handler"
@@ -99,67 +98,35 @@ resource "aws_sfn_state_machine" "lambda_transaction_standard_workflow" {
   role_arn = aws_iam_role.sfn_exec_role.arn
 
   definition = jsonencode({
-    Comment = "A workflow that invokes LambdaTransaction multiple times",
-    StartAt = "InvokeLambda1",
-    States = {
-      InvokeLambda1 = {
-        Type     = "Task",
-        Resource = "arn:aws:states:::lambda:invoke",
-        Parameters = {
-          FunctionName = aws_lambda_function.lambda_transaction.arn,
-          Payload = {
-            "input.$" : "$"
-          }
+    Comment: "A Step Functions state machine that calls Lambda twice",
+    StartAt: "CallLambda1",
+    States: {
+      CallLambda1: {
+        Type: "Task",
+        Resource: aws_lambda_function.lambda_transaction.arn,
+        Parameters: {
+          "hostname.$": "$.hostname",
+          "username.$": "$.username",
+          "password.$": "$.password"
         },
-        Next = "InvokeLambda2"
+        ResultPath: "$.lambda1result",
+        Next: "CallLambda2"
       },
-      InvokeLambda2 = {
-        Type     = "Task",
-        Resource = "arn:aws:states:::lambda:invoke",
-        Parameters = {
-          FunctionName = aws_lambda_function.lambda_transaction.arn,
-          Payload = {
-            "input.$" : "$"
-          }
+      CallLambda2: {
+        Type: "Task",
+        Resource: aws_lambda_function.lambda_transaction.arn,
+        Parameters: {
+          "hostname.$": "$.hostname",
+          "username.$": "$.username",
+          "password.$": "$.password"
         },
-        Next = "InvokeLambda3"
-      }
-      InvokeLambda3 = {
-        Type     = "Task",
-        Resource = "arn:aws:states:::lambda:invoke",
-        Parameters = {
-          FunctionName = aws_lambda_function.lambda_transaction.arn,
-          Payload = {
-            "input.$" : "$"
-          }
-        },
-        Next = "InvokeLambda4"
-      }
-      InvokeLambda4 = {
-        Type     = "Task",
-        Resource = "arn:aws:states:::lambda:invoke",
-        Parameters = {
-          FunctionName = aws_lambda_function.lambda_transaction.arn,
-          Payload = {
-            "input.$" : "$"
-          }
-        },
-        Next = "InvokeLambda5"
-      }
-      InvokeLambda5 = {
-        Type     = "Task",
-        Resource = "arn:aws:states:::lambda:invoke",
-        Parameters = {
-          FunctionName = aws_lambda_function.lambda_transaction.arn,
-          Payload = {
-            "input.$" : "$"
-          }
-        },
-        End = true
+        ResultPath: "$.lambda2result",
+        End: true
       }
     }
   })
 }
+
 
 resource "aws_sfn_state_machine" "lambda_transaction_express_workflow" {
   name     = "BenchmarkExpressWorkflow"
