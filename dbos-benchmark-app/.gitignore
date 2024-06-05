@@ -1,4 +1,10 @@
+# DBOS-specific
+.dbos
+
+
 # Logs
+**/.DS_Store
+**/prisma/migrations/*
 logs
 *.log
 npm-debug.log*
@@ -6,16 +12,7 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
-
-# Miscellaneous
-*.zip
-.terraform
-.terraform.lock.hcl
-*.tfstate
-*.tfstate.backup
-.vscode/
-dist/
-.dbos/
+dbos_deploy/
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
@@ -103,8 +100,11 @@ dist
 
 # Gatsby files
 .cache/
+
 # Comment in the public line in if your project uses Gatsby and not Next.js
+
 # https://nextjs.org/blog/next-9-1#public-directory-support
+
 # public
 
 # vuepress build output
@@ -112,7 +112,6 @@ dist
 
 # vuepress v2.x temp and cache directory
 .temp
-.cache
 
 # Docusaurus cache and generated files
 .docusaurus
@@ -132,9 +131,16 @@ dist
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
 
+# VSCode settings
+.vscode/settings.json
+
 # yarn v2
 .yarn/cache
 .yarn/unplugged
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Editor temp/recovery files
+*.swp
+*.swo
