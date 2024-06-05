@@ -24,6 +24,7 @@ if __name__=='__main__':
     parser.add_argument('-U', '--username', required=True, help='The username for the database')
     parser.add_argument('-W', '--password', required=True, help='The password for the database')
     parser.add_argument('-n', '--num-executions', required=True, type=int, help='The number of executions to benchmark')
+    parser.add_argument('-i', '--num-invocations', required=True, type=int, help='The number of times the workflow should invoke the transaction')
 
     args = parser.parse_args()
 
@@ -34,7 +35,7 @@ if __name__=='__main__':
         "hostname": args.hostname,
         "username": args.username,
         "password": args.password,
-        "steps": 2
+        "steps": args.num_invocations,
     }
 
     # Invoke the Lambda function 1000 times and report of the duration of the standard workflow
