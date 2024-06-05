@@ -60,7 +60,7 @@ resource "aws_iam_role_policy" "sfn_exec_policy" {
         ],
         Effect = "Allow",
         Resource = [
-          aws_lambda_function.hello_world.arn
+          aws_lambda_function.lambda_transaction.arn
         ]
       }
     ]
@@ -71,11 +71,11 @@ resource "aws_iam_role_policy" "sfn_exec_policy" {
 ### Lambda
 ####################################
 
-resource "aws_lambda_function" "hello_world" {
-  function_name = "HelloWorldFunction"
-  handler       = "hello_world.handler"
+resource "aws_lambda_function" "lambda_transaction" {
+  function_name = "LambdaTransaction"
+  handler       = "index.handler"
   runtime       = "nodejs20.x"
-  filename      = "lambda/hello_world.zip"
+  filename      = "lambda/lambda_transaction.zip"
   role          = aws_iam_role.lambda_exec_role.arn
   memory_size   = 512
 }
@@ -94,19 +94,19 @@ resource "aws_lambda_function" "sfn_executor" {
 ### Step Functions
 ####################################
 
-resource "aws_sfn_state_machine" "hello_world_standard_workflow" {
+resource "aws_sfn_state_machine" "lambda_transaction_standard_workflow" {
   name     = "BenchmarkStandardWorkflow"
   role_arn = aws_iam_role.sfn_exec_role.arn
 
   definition = jsonencode({
-    Comment = "A workflow that invokes the HelloWorld lambda function twice.",
+    Comment = "A workflow that invokes LambdaTransaction multiple times",
     StartAt = "InvokeLambda1",
     States = {
       InvokeLambda1 = {
         Type     = "Task",
         Resource = "arn:aws:states:::lambda:invoke",
         Parameters = {
-          FunctionName = aws_lambda_function.hello_world.arn,
+          FunctionName = aws_lambda_function.lambda_transaction.arn,
           Payload = {
             "input.$" : "$"
           }
@@ -117,7 +117,7 @@ resource "aws_sfn_state_machine" "hello_world_standard_workflow" {
         Type     = "Task",
         Resource = "arn:aws:states:::lambda:invoke",
         Parameters = {
-          FunctionName = aws_lambda_function.hello_world.arn,
+          FunctionName = aws_lambda_function.lambda_transaction.arn,
           Payload = {
             "input.$" : "$"
           }
@@ -128,7 +128,7 @@ resource "aws_sfn_state_machine" "hello_world_standard_workflow" {
         Type     = "Task",
         Resource = "arn:aws:states:::lambda:invoke",
         Parameters = {
-          FunctionName = aws_lambda_function.hello_world.arn,
+          FunctionName = aws_lambda_function.lambda_transaction.arn,
           Payload = {
             "input.$" : "$"
           }
@@ -139,7 +139,7 @@ resource "aws_sfn_state_machine" "hello_world_standard_workflow" {
         Type     = "Task",
         Resource = "arn:aws:states:::lambda:invoke",
         Parameters = {
-          FunctionName = aws_lambda_function.hello_world.arn,
+          FunctionName = aws_lambda_function.lambda_transaction.arn,
           Payload = {
             "input.$" : "$"
           }
@@ -150,7 +150,7 @@ resource "aws_sfn_state_machine" "hello_world_standard_workflow" {
         Type     = "Task",
         Resource = "arn:aws:states:::lambda:invoke",
         Parameters = {
-          FunctionName = aws_lambda_function.hello_world.arn,
+          FunctionName = aws_lambda_function.lambda_transaction.arn,
           Payload = {
             "input.$" : "$"
           }
@@ -161,11 +161,11 @@ resource "aws_sfn_state_machine" "hello_world_standard_workflow" {
   })
 }
 
-resource "aws_sfn_state_machine" "hello_world_express_workflow" {
+resource "aws_sfn_state_machine" "lambda_transaction_express_workflow" {
   name     = "BenchmarkExpressWorkflow"
   role_arn = aws_iam_role.sfn_exec_role.arn
 
-  definition = aws_sfn_state_machine.hello_world_standard_workflow.definition
+  definition = aws_sfn_state_machine.lambda_transaction_standard_workflow.definition
 
   type = "EXPRESS"
 }
@@ -198,13 +198,13 @@ resource "aws_api_gateway_integration" "lambda_integration" {
 
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.hello_world.invoke_arn
+  uri                     = aws_lambda_function.lambda_transaction.invoke_arn
 }
 
 resource "aws_lambda_permission" "allow_api_gateway" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.hello_world.function_name
+  function_name = aws_lambda_function.lambda_transaction.function_name
   principal     = "apigateway.amazonaws.com"
 
   source_arn = "${aws_api_gateway_rest_api.lambda_api.execution_arn}/*/*/hello-world"
