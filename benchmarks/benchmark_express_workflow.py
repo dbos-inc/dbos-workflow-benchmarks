@@ -1,7 +1,6 @@
 import boto3
 import json
 import time
-from datetime import datetime
 import argparse
 import statistics
 
