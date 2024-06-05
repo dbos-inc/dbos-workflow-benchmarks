@@ -102,34 +102,39 @@ resource "aws_sfn_state_machine" "lambda_transaction_standard_workflow" {
   role_arn = aws_iam_role.sfn_exec_role.arn
 
   definition = jsonencode({
-    Comment : "A Step Functions state machine that calls Lambda twice",
-    StartAt : "CallLambda1",
+    Comment : "A Step Functions state machine that calls Lambda steps times",
+    StartAt : "Loop",
     States : {
-      CallLambda1 : {
-        Type : "Task",
-        Resource : aws_lambda_function.lambda_transaction.arn,
+      Loop : {
+        Type : "Map",
+        ItemsPath : "$.steps",
         Parameters : {
           "hostname.$" : "$.hostname",
           "username.$" : "$.username",
-          "password.$" : "$.password"
+          "password.$" : "$.password",
+          "step.$" : "$$.Map.Item.Value" // Pass the current item of the Map iteration
         },
-        ResultPath : "$.lambda1result",
-        Next : "CallLambda2"
-      },
-      CallLambda2 : {
-        Type : "Task",
-        Resource : aws_lambda_function.lambda_transaction.arn,
-        Parameters : {
-          "hostname.$" : "$.hostname",
-          "username.$" : "$.username",
-          "password.$" : "$.password"
+        Iterator : {
+          StartAt : "CallLambda",
+          States : {
+            CallLambda : {
+              Type : "Task",
+              Resource : aws_lambda_function.lambda_transaction.arn,
+              Parameters : {
+                "hostname.$" : "$.hostname",
+                "username.$" : "$.username",
+                "password.$" : "$.password"
+              },
+              End : true
+            }
+          }
         },
-        ResultPath : "$.lambda2result",
         End : true
       }
     }
   })
 }
+
 
 resource "aws_sfn_state_machine" "lambda_transaction_express_workflow" {
   name     = "BenchmarkExpressWorkflow"
