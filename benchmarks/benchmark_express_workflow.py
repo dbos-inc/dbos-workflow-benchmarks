@@ -3,6 +3,7 @@ import json
 import time
 import argparse
 import statistics
+import numpy as np
 
 # Initialize the Step Functions client
 client = boto3.client('stepfunctions', region_name='us-east-1')
@@ -21,9 +22,9 @@ def start_sync_workflow(state_machine_arn, input_data, execution_name_prefix):
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Run Step Functions express workflow and measure latencies.')
-    parser.add_argument('--hostname', required=True, help='The hostname of the database')
-    parser.add_argument('--username', required=True, help='The username for the database')
-    parser.add_argument('--password', required=True, help='The password for the database')
+    parser.add_argument('-H', '--hostname', required=True, help='The hostname of the database')
+    parser.add_argument('-U', '--username', required=True, help='The username for the database')
+    parser.add_argument('-W', '--password', required=True, help='The password for the database')
 
     args = parser.parse_args()
 
@@ -49,9 +50,11 @@ if __name__=='__main__':
     max_latency = max(latencies)
     min_latency = min(latencies)
     median_latency = statistics.median(latencies)
+    p99_latency = np.percentile(latencies, 99)
 
     print("\nSummary of Latencies:")
     print(f'Average Latency: {average_latency:.2f} milliseconds')
     print(f'Max Latency: {max_latency:.2f} milliseconds')
     print(f'Min Latency: {min_latency:.2f} milliseconds')
     print(f'Median Latency: {median_latency:.2f} milliseconds')
+    print(f'99th Percentile Latency: {p99_latency:.2f} milliseconds')
