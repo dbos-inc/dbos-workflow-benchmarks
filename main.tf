@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 ####################################
-### IAM Roles
+### Lambda IAM Roles
 ####################################
 
 resource "aws_iam_role" "lambda_exec_role" {
@@ -31,6 +31,10 @@ resource "aws_iam_role_policy_attachment" "lambda_sfn_policy_attachment" {
   role       = aws_iam_role.lambda_exec_role.name
   policy_arn = "arn:aws:iam::aws:policy/AWSStepFunctionsFullAccess"
 }
+
+####################################
+### Step Functions IAM Roles
+####################################
 
 resource "aws_iam_role" "sfn_exec_role" {
   name = "sfn_execution_role"
@@ -98,35 +102,34 @@ resource "aws_sfn_state_machine" "lambda_transaction_standard_workflow" {
   role_arn = aws_iam_role.sfn_exec_role.arn
 
   definition = jsonencode({
-    Comment: "A Step Functions state machine that calls Lambda twice",
-    StartAt: "CallLambda1",
-    States: {
-      CallLambda1: {
-        Type: "Task",
-        Resource: aws_lambda_function.lambda_transaction.arn,
-        Parameters: {
-          "hostname.$": "$.hostname",
-          "username.$": "$.username",
-          "password.$": "$.password"
+    Comment : "A Step Functions state machine that calls Lambda twice",
+    StartAt : "CallLambda1",
+    States : {
+      CallLambda1 : {
+        Type : "Task",
+        Resource : aws_lambda_function.lambda_transaction.arn,
+        Parameters : {
+          "hostname.$" : "$.hostname",
+          "username.$" : "$.username",
+          "password.$" : "$.password"
         },
-        ResultPath: "$.lambda1result",
-        Next: "CallLambda2"
+        ResultPath : "$.lambda1result",
+        Next : "CallLambda2"
       },
-      CallLambda2: {
-        Type: "Task",
-        Resource: aws_lambda_function.lambda_transaction.arn,
-        Parameters: {
-          "hostname.$": "$.hostname",
-          "username.$": "$.username",
-          "password.$": "$.password"
+      CallLambda2 : {
+        Type : "Task",
+        Resource : aws_lambda_function.lambda_transaction.arn,
+        Parameters : {
+          "hostname.$" : "$.hostname",
+          "username.$" : "$.username",
+          "password.$" : "$.password"
         },
-        ResultPath: "$.lambda2result",
-        End: true
+        ResultPath : "$.lambda2result",
+        End : true
       }
     }
   })
 }
-
 
 resource "aws_sfn_state_machine" "lambda_transaction_express_workflow" {
   name     = "BenchmarkExpressWorkflow"
@@ -138,58 +141,13 @@ resource "aws_sfn_state_machine" "lambda_transaction_express_workflow" {
 }
 
 ####################################
-### API Gateway
+### Outputs
 ####################################
 
-resource "aws_api_gateway_rest_api" "lambda_api" {
-  name = "LambdaBenchmarkingAPI"
+output "express_workflow_arn" {
+  value = aws_sfn_state_machine.lambda_transaction_express_workflow.arn
 }
 
-resource "aws_api_gateway_resource" "lambda_gateway_resource" {
-  rest_api_id = aws_api_gateway_rest_api.lambda_api.id
-  parent_id   = aws_api_gateway_rest_api.lambda_api.root_resource_id
-  path_part   = "hello-world"
-}
-
-resource "aws_api_gateway_method" "lambda_gateway_method" {
-  rest_api_id   = aws_api_gateway_rest_api.lambda_api.id
-  resource_id   = aws_api_gateway_resource.lambda_gateway_resource.id
-  http_method   = "GET"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_integration" "lambda_integration" {
-  rest_api_id = aws_api_gateway_rest_api.lambda_api.id
-  resource_id = aws_api_gateway_resource.lambda_gateway_resource.id
-  http_method = aws_api_gateway_method.lambda_gateway_method.http_method
-
-  integration_http_method = "POST"
-  type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.lambda_transaction.invoke_arn
-}
-
-resource "aws_lambda_permission" "allow_api_gateway" {
-  statement_id  = "AllowExecutionFromAPIGateway"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.lambda_transaction.function_name
-  principal     = "apigateway.amazonaws.com"
-
-  source_arn = "${aws_api_gateway_rest_api.lambda_api.execution_arn}/*/*/hello-world"
-}
-
-resource "aws_api_gateway_deployment" "lambda_gateway_deployment" {
-  depends_on = [
-    aws_api_gateway_integration.lambda_integration,
-  ]
-
-  rest_api_id = aws_api_gateway_rest_api.lambda_api.id
-  stage_name  = "test"
-}
-
-####################################
-### Output
-####################################
-
-output "invoke_url" {
-  value = "${aws_api_gateway_deployment.lambda_gateway_deployment.invoke_url}/${aws_api_gateway_resource.lambda_gateway_resource.path_part}"
+output "sfn_executor_arn" {
+  value = aws_lambda_function.sfn_executor.arn
 }
