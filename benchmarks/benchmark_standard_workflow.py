@@ -15,7 +15,7 @@ def invoke_lambda(lambda_arn, input_data):
     )
     response_payload = json.loads(response['Payload'].read())
     body = json.loads(response_payload.get('body', '{}'))
-    runtime_seconds = body.get('runtimeSeconds', 0)
+    runtime_seconds = body.get('runtimeSeconds')
     return runtime_seconds * 1000  # Convert to milliseconds
 
 if __name__=='__main__':
