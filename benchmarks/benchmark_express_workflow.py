@@ -5,7 +5,6 @@ import argparse
 import statistics
 import numpy as np
 
-# Initialize the Step Functions client
 client = boto3.client('stepfunctions', region_name='us-east-1')
 
 # Function to start the express workflow and get latency
@@ -25,13 +24,14 @@ if __name__=='__main__':
     parser.add_argument('-H', '--hostname', required=True, help='The hostname of the database')
     parser.add_argument('-U', '--username', required=True, help='The username for the database')
     parser.add_argument('-W', '--password', required=True, help='The password for the database')
+    parser.add_argument('-n', '--num-executions', required=True, type=int, help='The number of executions to benchmark')
 
     args = parser.parse_args()
 
     # Parameters
     state_machine_arn = 'arn:aws:states:us-east-1:500883621673:stateMachine:BenchmarkExpressWorkflow'
     execution_name_prefix = 'ExecutionTest'
-    num_executions = 1000
+    num_executions = args.num_executions
     input_data = {
         "hostname": args.hostname,
         "username": args.username,
