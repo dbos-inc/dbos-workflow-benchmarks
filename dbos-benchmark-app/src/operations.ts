@@ -29,10 +29,14 @@ export class Hello {
   @Workflow()
   static async helloWorkflow(ctxt: WorkflowContext, num: number) {
     const start = performance.now();
+    let output ;
     for (let i = 0; i < num; i++) {
-      await ctxt.invoke(Hello).helloTransaction("dbos");
+      output = await ctxt.invoke(Hello).helloTransaction("dbos");
     }
     const end = performance.now();
-    return end - start;
+    return {
+      output: output,
+      runtime: end - start,
+    };
   }
 }
