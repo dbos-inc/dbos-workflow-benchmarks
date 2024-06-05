@@ -12,10 +12,17 @@ export class Hello {
   @Transaction()
   static async helloTransaction(ctxt: TransactionContext<Knex>, user: string) {
     // Retrieve and increment the number of times this user has been greeted.
-    const query = "INSERT INTO dbos_hello (name, greet_count) VALUES (?, 1) ON CONFLICT (name) DO UPDATE SET greet_count = dbos_hello.greet_count + 1 RETURNING greet_count;";
-    const { rows } = await ctxt.client.raw(query, [user]) as { rows: dbos_hello[] };
+    const read_query = "SELECT COALESCE((SELECT greet_count FROM dbos_hello WHERE name = ?), 0) AS greet_count;";
+    const { rows } = await ctxt.client.raw(read_query, [user]) as { rows: dbos_hello[] };
     const greet_count = rows[0].greet_count;
-    return `Hello, ${user}! You have been greeted ${greet_count} times.\n`;
+    let write_query;
+    if (greet_count > 0) {
+      write_query = "UPDATE dbos_hello SET greet_count=? WHERE name=?;";
+    } else {
+      write_query = "INSERT INTO dbos_hello (greet_count, name) VALUES (?, ?);";
+    }
+    await ctxt.client.raw(write_query, [greet_count + 1, user]);
+    return `Hello, ${user}! You have been greeted ${greet_count + 1} times.\n`;
   }
 
   @GetApi('/:num')
