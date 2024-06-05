@@ -1,26 +1,25 @@
 import boto3
 import json
-import time
 import argparse
 import statistics
 import numpy as np
 
-client = boto3.client('stepfunctions', region_name='us-east-1')
+client = boto3.client('lambda', region_name='us-east-1')
 
-# Function to start the express workflow and get latency
-def start_sync_workflow(state_machine_arn, input_data, execution_name_prefix):
-    response = client.start_sync_execution(
-        stateMachineArn=state_machine_arn,
-        name=f'{execution_name_prefix}-{int(time.time() * 1000)}',
-        input=json.dumps(input_data)
+# Invoke the Lambda function that invokes the standard workflow and get the standard workflow's duration
+def invoke_lambda(lambda_arn, input_data):
+    response = client.invoke(
+        FunctionName=lambda_arn,
+        InvocationType='RequestResponse',
+        Payload=json.dumps(input_data)
     )
-    start_date = response['startDate']
-    stop_date = response['stopDate']
-    latency_ms = (stop_date - start_date).total_seconds() * 1000 
-    return latency_ms, response
+    response_payload = json.loads(response['Payload'].read())
+    body = json.loads(response_payload.get('body', '{}'))
+    runtime_seconds = body.get('runtimeSeconds')
+    return runtime_seconds * 1000  # Convert to milliseconds
 
 if __name__=='__main__':
-    parser = argparse.ArgumentParser(description='Run Step Functions express workflow and measure latencies.')
+    parser = argparse.ArgumentParser(description='Invoke Lambda function and measure latencies.')
     parser.add_argument('-H', '--hostname', required=True, help='The hostname of the database')
     parser.add_argument('-U', '--username', required=True, help='The username for the database')
     parser.add_argument('-W', '--password', required=True, help='The password for the database')
@@ -29,21 +28,20 @@ if __name__=='__main__':
     args = parser.parse_args()
 
     # Parameters
-    state_machine_arn = 'arn:aws:states:us-east-1:500883621673:stateMachine:BenchmarkExpressWorkflow'
-    execution_name_prefix = 'ExecutionTest'
-    num_executions = args.num_executions
+    lambda_arn = 'arn:aws:lambda:us-east-1:500883621673:function:SfnExecutor'
+    num_invocations = args.num_executions
     input_data = {
         "hostname": args.hostname,
         "username": args.username,
         "password": args.password
     }
 
-    # Run the express workflow 1000 times and report latencies
+    # Invoke the Lambda function 1000 times and report of the duration of the standard workflow
     latencies = []
-    for i in range(num_executions):
-        latency_ms, response = start_sync_workflow(state_machine_arn, input_data, execution_name_prefix)
+    for i in range(num_invocations):
+        latency_ms = invoke_lambda(lambda_arn, input_data)
         latencies.append(latency_ms)
-        print(f'Execution {i+1} latency: {latency_ms:.2f} milliseconds')
+        print(f'Invocation {i+1} latency: {latency_ms:.2f} milliseconds')
 
     # Compute summary statistics
     average_latency = sum(latencies) / len(latencies)
