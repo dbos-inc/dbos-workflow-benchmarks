@@ -35,7 +35,8 @@ if __name__=='__main__':
     input_data = {
         "hostname": args.hostname,
         "username": args.username,
-        "password": args.password
+        "password": args.password,
+        "steps": 2
     }
 
     # Run the express workflow 1000 times and report latencies

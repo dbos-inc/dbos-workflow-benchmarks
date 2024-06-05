@@ -33,7 +33,8 @@ if __name__=='__main__':
     input_data = {
         "hostname": args.hostname,
         "username": args.username,
-        "password": args.password
+        "password": args.password,
+        "steps": 2
     }
 
     # Invoke the Lambda function 1000 times and report of the duration of the standard workflow

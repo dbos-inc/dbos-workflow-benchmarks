@@ -102,34 +102,51 @@ resource "aws_sfn_state_machine" "lambda_transaction_standard_workflow" {
   role_arn = aws_iam_role.sfn_exec_role.arn
 
   definition = jsonencode({
-    Comment : "A Step Functions state machine that calls Lambda steps times",
-    StartAt : "Loop",
-    States : {
-      Loop : {
-        Type : "Map",
-        ItemsPath : "$.steps",
-        Parameters : {
-          "hostname.$" : "$.hostname",
-          "username.$" : "$.username",
-          "password.$" : "$.password",
-          "step.$" : "$$.Map.Item.Value" // Pass the current item of the Map iteration
+    Comment: "A Step Functions state machine that calls Lambda steps times",
+    StartAt: "Initialize",
+    States: {
+      Initialize: {
+        Type: "Pass",
+        Parameters: {
+          "currentIndex": 0,
+          "totalSteps.$": "$.steps"
         },
-        Iterator : {
-          StartAt : "CallLambda",
-          States : {
-            CallLambda : {
-              Type : "Task",
-              Resource : aws_lambda_function.lambda_transaction.arn,
-              Parameters : {
-                "hostname.$" : "$.hostname",
-                "username.$" : "$.username",
-                "password.$" : "$.password"
-              },
-              End : true
-            }
+        ResultPath: "$.iterator",
+        Next: "Loop"
+      },
+      Loop: {
+        Type: "Choice",
+        Choices: [
+          {
+            Variable: "$.iterator.currentIndex",
+            NumericLessThanPath: "$.iterator.totalSteps",
+            Next: "CallLambda"
           }
+        ],
+        Default: "Done"
+      },
+      CallLambda: {
+        Type: "Task",
+        Resource: aws_lambda_function.lambda_transaction.arn,
+        Parameters: {
+          "hostname.$": "$.hostname",
+          "username.$": "$.username",
+          "password.$": "$.password"
         },
-        End : true
+        ResultPath: "$.lambdaResult",
+        Next: "IncrementIndex"
+      },
+      IncrementIndex: {
+        Type: "Pass",
+        Parameters: {
+          "currentIndex.$": "States.MathAdd($.iterator.currentIndex, 1)",
+          "totalSteps.$": "$.iterator.totalSteps"
+        },
+        ResultPath: "$.iterator",
+        Next: "Loop"
+      },
+      Done: {
+        Type: "Succeed"
       }
     }
   })
