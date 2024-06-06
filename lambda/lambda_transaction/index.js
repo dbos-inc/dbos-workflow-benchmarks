@@ -3,6 +3,7 @@ const { Client } = require('pg');
 let client;
 const user = "dbos";
 
+// This reuses the client and connection across invocations
 const connectToDatabase = async (hostname, username, password) => {
     if (!client) {
         client = new Client({
