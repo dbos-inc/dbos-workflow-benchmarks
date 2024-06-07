@@ -18,6 +18,11 @@ def invoke_lambda(lambda_arn, input_data):
     runtime_seconds = body.get('runtimeSeconds')
     return runtime_seconds * 1000  # Convert to milliseconds
 
+def get_account_id():
+    client = boto3.client('sts')
+    account_id = client.get_caller_identity()['Account']
+    return account_id
+
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Invoke Lambda function and measure latencies.')
     parser.add_argument('-H', '--hostname', required=True, help='The hostname of the database')
@@ -29,7 +34,7 @@ if __name__=='__main__':
     args = parser.parse_args()
 
     # Parameters
-    lambda_arn = 'arn:aws:lambda:us-east-1:500883621673:function:SfnExecutor'
+    lambda_arn = f'arn:aws:lambda:us-east-1:{get_account_id()}:function:SfnExecutor'
     num_invocations = args.num_executions
     input_data = {
         "hostname": args.hostname,

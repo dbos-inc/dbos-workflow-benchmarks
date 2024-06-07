@@ -19,6 +19,11 @@ def start_sync_workflow(state_machine_arn, input_data, execution_name_prefix):
     latency_ms = (stop_date - start_date).total_seconds() * 1000 
     return latency_ms, response
 
+def get_account_id():
+    client = boto3.client('sts')
+    account_id = client.get_caller_identity()['Account']
+    return account_id
+
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Run Step Functions express workflow and measure latencies.')
     parser.add_argument('-H', '--hostname', required=True, help='The hostname of the database')
@@ -30,7 +35,7 @@ if __name__=='__main__':
     args = parser.parse_args()
 
     # Parameters
-    state_machine_arn = 'arn:aws:states:us-east-1:500883621673:stateMachine:BenchmarkExpressWorkflow'
+    state_machine_arn = f'arn:aws:states:us-east-1:{get_account_id()}:stateMachine:BenchmarkExpressWorkflow'
     execution_name_prefix = 'ExecutionTest'
     num_executions = args.num_executions
     input_data = {
