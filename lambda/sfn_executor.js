@@ -1,20 +1,26 @@
 const { SFNClient, StartExecutionCommand, DescribeExecutionCommand } = require("@aws-sdk/client-sfn");
+const { STSClient, GetCallerIdentityCommand } = require("@aws-sdk/client-sts");
 
 // Initialize Step Functions Client
-const client = new SFNClient({ region: "us-east-1" });
+const stsClient = new STSClient({});
+const sfnClient = new SFNClient({ region: "us-east-1" });
 
 exports.handler = async (event) => {
-    // Parameters for starting the Step Functions execution
-    const startParams = {
-        stateMachineArn: "arn:aws:states:us-east-1:500883621673:stateMachine:BenchmarkStandardWorkflow",
-        input: JSON.stringify(event)  // Pass event data as input to the Step Functions
-    };
-
-    const startCommand = new StartExecutionCommand(startParams);
 
     try {
+        const idCommand = new GetCallerIdentityCommand({});
+        const stsData = await stsClient.send(idCommand);
+
+        // Parameters for starting the Step Functions execution
+        const startParams = {
+            stateMachineArn: `arn:aws:states:us-east-1:${stsData.Account}:stateMachine:BenchmarkStandardWorkflow`,
+            input: JSON.stringify(event)  // Pass event data as input to the Step Functions
+        };
+
+        const startCommand = new StartExecutionCommand(startParams);
+
         // Start execution of the Step Functions state machine
-        const startResult = await client.send(startCommand);
+        const startResult = await sfnClient.send(startCommand);
         const executionArn = startResult.executionArn;
 
         // Initialize variables for the loop
@@ -27,7 +33,7 @@ exports.handler = async (event) => {
               executionArn: executionArn
           };
           const describeCommand = new DescribeExecutionCommand(describeParams);
-          const executionDetails = await client.send(describeCommand);
+          const executionDetails = await sfnClient.send(describeCommand);
 
           status = executionDetails.status;
           if (status !== 'RUNNING') {
