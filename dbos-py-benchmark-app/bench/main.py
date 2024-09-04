@@ -1,5 +1,4 @@
 import time
-from typing import TypedDict
 from fastapi import FastAPI
 from sqlalchemy.dialects.postgresql import insert
 
@@ -9,10 +8,6 @@ from .schema import dbos_hello
 
 app = FastAPI()
 DBOS(app)
-
-class Perf(TypedDict):
-    output: str
-    runtime: float
 
 @DBOS.transaction()
 def bench_transaction(name: str) -> str:
@@ -38,7 +33,7 @@ def bench_workflow(num: int) -> str:
 
 # Single transaction workflow
 @app.get("/txn/{num}")
-def handler_transaction(num: int) -> Perf:
+def handler_transaction(num: int):
     start = time.time()
     output = bench_transaction(f"dbos-{num}")
     duration = (time.time() - start) * 1000
@@ -46,7 +41,7 @@ def handler_transaction(num: int) -> Perf:
 
 # Multiple transaction workflow
 @app.get("/wf/{num}")
-def handler_workflow(num: int) -> Perf:
+def handler_workflow(num: int):
     start = time.time()
     output = bench_workflow(int(num))
     duration = (time.time() - start) * 1000
@@ -54,7 +49,7 @@ def handler_workflow(num: int) -> Perf:
 
 # Bare handler
 @app.get("/bare/{num}")
-def readme(num: int) -> Perf:
+def readme(num: int):
     start = time.time()
     output = f"hello world {num}!"
     duration = (time.time() - start) * 1000
