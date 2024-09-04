@@ -1,7 +1,6 @@
 import time
 from typing import TypedDict
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
 from sqlalchemy.dialects.postgresql import insert
 
 from dbos import DBOS

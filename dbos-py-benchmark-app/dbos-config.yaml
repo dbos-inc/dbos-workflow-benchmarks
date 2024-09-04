@@ -7,7 +7,7 @@ name: dbos-py-benchmark-app
 language: python
 runtimeConfig:
   start:
-    - "fastapi run dbos_py_benchmark_app/main.py"
+    - fastapi run bench/main.py
 database:
   hostname: localhost
   port: 5432
