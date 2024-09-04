@@ -19,7 +19,7 @@ config.set_main_option("sqlalchemy.url", get_dbos_database_url())
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from dbos_py_benchmark_app.schema import metadata
+from bench.schema import metadata
 target_metadata = metadata
 
 # other values from the config, defined by the needs of env.py,
