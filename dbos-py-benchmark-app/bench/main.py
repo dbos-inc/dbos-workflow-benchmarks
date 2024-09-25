@@ -7,7 +7,7 @@ from dbos import DBOS
 from .schema import dbos_hello
 
 app = FastAPI()
-DBOS(app)
+DBOS(fastapi=app)
 
 @DBOS.transaction()
 def bench_transaction(name: str) -> str:

@@ -9,13 +9,11 @@ certifi==2024.8.30
 charset-normalizer==3.3.2
 click==8.1.7
 colorama==0.4.6; platform_system == "Windows" or sys_platform == "win32"
-dbos==0.5.0a5
+dbos==0.7.1
 deprecated==1.2.14
 dnspython==2.6.1
 email-validator==2.2.0
 exceptiongroup==1.2.2; python_version < "3.11"
-fastapi==0.112.2
-fastapi-cli==0.0.5
 fastapi-cli[standard]==0.0.5
 fastapi[standard]==0.112.2
 googleapis-common-protos==1.65.0
@@ -42,7 +40,7 @@ opentelemetry-sdk==1.27.0
 opentelemetry-semantic-conventions==0.48b0
 protobuf==4.25.4
 psutil==6.0.0
-psycopg2-binary==2.9.9
+psycopg==3.2.2
 pydantic==2.8.2
 pydantic-core==2.20.1
 pygments==2.18.0
@@ -62,11 +60,12 @@ starlette==0.38.4
 tomlkit==0.13.2
 typer==0.12.5
 typing-extensions==4.12.2
+tzdata==2024.2; sys_platform == "win32"
 urllib3==2.2.2
-uvicorn==0.30.6
 uvicorn[standard]==0.30.6
 uvloop==0.20.0; (sys_platform != "cygwin" and sys_platform != "win32") and platform_python_implementation != "PyPy"
 watchfiles==0.24.0
 websockets==13.0.1
 wrapt==1.16.0
 zipp==3.20.1
+
