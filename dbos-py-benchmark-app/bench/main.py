@@ -14,10 +14,12 @@ DBOS(fastapi=app)
 # Bare handler
 @app.get("/bare/{num}")
 def readme(num: int):
-    start = time.time()
-    output = f"hello world {num}!"
-    duration = (time.time() - start) * 1000
-    return {"output": output, "runtime": duration}
+    with disable_gc():
+        start = time.perf_counter_ns()
+        output = f"hello world {num}!"
+        end = time.perf_counter_ns()
+        elapsed = end - start
+        return {"output": output, "runtime": elapsed}
 
 
 # Sync transaction
