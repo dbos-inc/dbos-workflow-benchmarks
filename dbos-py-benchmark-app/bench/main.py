@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+import gc
 import time
 from fastapi import FastAPI
 from sqlalchemy.dialects.postgresql import insert
@@ -8,6 +10,16 @@ from .schema import dbos_hello
 
 app = FastAPI()
 DBOS(fastapi=app)
+
+@contextmanager
+def disable_gc():
+    gcold = gc.isenabled()
+    gc.disable()
+    try:
+        yield
+    finally:
+        if gcold:
+            gc.enable()
 
 @DBOS.transaction()
 def bench_transaction(name: str) -> str:
@@ -34,24 +46,29 @@ def bench_workflow(num: int) -> str:
 # Single transaction workflow
 @app.get("/txn/{num}")
 def handler_transaction(num: int):
-    start = time.time()
-    output = bench_transaction(f"dbos-{num}")
-    duration = (time.time() - start) * 1000
-    return {"output": output, "runtime": duration}
+    with disable_gc():
+        start = time.perf_counter_ns()
+        output = bench_transaction(f"dbos-{num}")
+        end = time.perf_counter_ns()
+        elapsed = end - start
+        return {"output": output, "runtime": elapsed}
 
 # Multiple transaction workflow
 @app.get("/wf/{num}")
 def handler_workflow(num: int):
-    start = time.time()
-    output = bench_workflow(int(num))
-    duration = (time.time() - start) * 1000
-    return {"output": output, "runtime": duration}
+    with disable_gc():
+        start = time.perf_counter_ns()
+        output = bench_workflow(int(num))
+        end = time.perf_counter_ns()
+        elapsed = end - start
+        return {"output": output, "runtime": elapsed}
 
 # Bare handler
 @app.get("/bare/{num}")
 def readme(num: int):
-    start = time.time()
-    output = f"hello world {num}!"
-    duration = (time.time() - start) * 1000
-    return {"output": output, "runtime": duration}
-
+    with disable_gc():
+        start = time.perf_counter_ns()
+        output = f"hello world {num}!"
+        end = time.perf_counter_ns()
+        elapsed = end - start
+        return {"output": output, "runtime": elapsed}
