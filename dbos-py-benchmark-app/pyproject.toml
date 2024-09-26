@@ -6,7 +6,8 @@ authors = [
     {name = "Qian Li", email = "qian.li@dbos.dev"},
 ]
 dependencies = [
-    "dbos==0.7.1",
+    "dbos @ file:///${PROJECT_ROOT}/dbos-0.8.0a29%2Bgf3bd6b5-py3-none-any.whl",
+    "file:///${PROJECT_ROOT}/dbos-0.8.0a29%2Bgf3bd6b5-py3-none-any.whl",
 ]
 requires-python = ">3.9"
 readme = "README.md"
