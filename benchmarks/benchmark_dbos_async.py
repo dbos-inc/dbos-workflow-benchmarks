@@ -23,8 +23,9 @@ def benchmark_app(url: str, num_executions: int, async_handlers: bool = False):
         print(f"Executing {handler}")
         responses: list[int] = []
         for i in range(num_executions+20):
-            r = requests.get(f"{url}/{handler}/{i}")
+            r = requests.get(f"{url}/{handler}/20")
             responses.append(cast(int, r.json().get('runtime')))
+        responses.sort()
         endpoints[handler] = responses[10:-10]
 
     return endpoints
@@ -47,4 +48,6 @@ if __name__ == '__main__':
         print(f'  Min Latency: {min_latency:.2f} ms')
         print(f'  Median Latency: {median_latency:.2f} ms')
         print(f'  99th Percentile Latency: {p99_latency:.2f} ms')
+
+
 
