@@ -26,7 +26,6 @@ cd dbos-benchmark-app
 npm i
 npx dbos-cloud login
 npx dbos-cloud db provision <db-name> -U <db-username> -W <db-password>
-npx dbos-cloud app register -d <db-name>
 npx dbos-cloud app deploy
 ```
 
