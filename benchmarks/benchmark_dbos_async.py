@@ -32,8 +32,8 @@ def benchmark_app(url: str, num_executions: int, async_handlers: bool = False):
 
 
 if __name__ == '__main__':
-    # results = benchmark_app("https://devhawkgoogle-dbos-py-benchmark-app-async.cloud.dbos.dev/", 100, True)
-    results = benchmark_app("https://devhawkgoogle-dbos-py-benchmark-app.cloud.dbos.dev/", 100, False)
+    results = benchmark_app("https://devhawkgoogle-dbos-py-benchmark-app-async.cloud.dbos.dev/", 100, True)
+    # results = benchmark_app("https://devhawkgoogle-dbos-py-benchmark-app.cloud.dbos.dev/", 100, False)
 
     for handler, latencies in results.items():
         average_latency = (sum(latencies) / len(latencies))/1000000
