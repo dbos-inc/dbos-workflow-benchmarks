@@ -6,8 +6,7 @@ authors = [
     {name = "Qian Li", email = "qian.li@dbos.dev"},
 ]
 dependencies = [
-    "aiohttp>=3.11.10",
-    "dbos @ file:///${PROJECT_ROOT}/dbos-0.16.0a23%2Bg6064e89-py3-none-any.whl",
+    "dbos>=0.15.0"
 ]
 requires-python = ">3.9"
 readme = "README.md"
