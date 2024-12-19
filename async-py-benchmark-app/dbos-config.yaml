@@ -1,0 +1,21 @@
+# To enable auto-completion and validation for this file in VSCode, install the RedHat YAML extension
+# https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml
+
+# yaml-language-server: $schema=https://raw.githubusercontent.com/dbos-inc/dbos-transact-py/main/dbos/dbos-config.schema.json
+
+name: async-py-bench
+language: python
+runtimeConfig:
+  start:
+    - fastapi run bench/main.py
+database:
+  hostname: localhost
+  port: 5432
+  username: postgres
+  password: ${PGPASSWORD}
+  app_db_name: dbos_py_benchmark_app_async
+  migrate:
+    - alembic upgrade head
+telemetry:
+  logs:
+    logLevel: INFO
