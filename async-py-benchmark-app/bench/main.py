@@ -7,7 +7,7 @@ from sqlalchemy.dialects.postgresql import insert
 import requests
 import aiohttp
 from dbos import DBOS
-import uvicorn
+import asyncio
 
 from .schema import dbos_hello, useless_facts
 
@@ -18,25 +18,28 @@ class UselessFact(TypedDict):
     id: str
     text: str
 
-# Bare handler
-@app.get("/bare/{num}")
-def readme(num: int):
-    with disable_gc():
-        start = time.perf_counter_ns()
-        output = f"hello world {num}!"
-        end = time.perf_counter_ns()
-        elapsed = end - start
-        return {"output": output, "runtime": elapsed}
+import random
 
-# Bare handler
-@app.get("/async-bare/{num}")
-async def readme_async(num: int):
-    with disable_gc():
-        start = time.perf_counter_ns()
-        output = f"hello world {num}!"
-        end = time.perf_counter_ns()
-        elapsed = end - start
-        return {"output": output, "runtime": elapsed}
+first_names = ["John", "Jane", "Alex", "Emily", "Chris", "Katie", "Michael", "Sarah", "David", "Laura"]
+last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Martinez", "Hernandez"]
+
+def random_name():
+    return f"{random.choice(first_names)} {random.choice(last_names)}"
+
+@DBOS.transaction()
+def save_greeting(name: str) -> str:
+    query = (
+        insert(dbos_hello)
+        .values(name=name, greet_count=1)
+        .on_conflict_do_update(
+            index_elements=["name"], set_={"greet_count": dbos_hello.c.greet_count + 1}
+        )
+        .returning(dbos_hello.c.greet_count)
+    )
+    greet_count = DBOS.sql_session.execute(query).scalar_one()
+    greeting = f"Greetings, {name}! You have been greeted {greet_count} times."
+    DBOS.logger.info(greeting)
+    return greeting
 
 # Sync transaction
 @DBOS.transaction()
@@ -68,27 +71,42 @@ async def retrieve_fact_async() -> UselessFact:
             useless_fact = await response.json()
             return {'id': useless_fact["id"], 'text': useless_fact["text"]}
 
+
+@DBOS.step()
+def retrieve_name() -> str:
+    name = random_name()
+    time.sleep(0.1)
+    return name
+
+@DBOS.step()
+async def retrieve_name_async() -> str:
+    name = random_name()
+    await asyncio.sleep(0.1)
+    return name
+
+
 # Sync workflow
 @DBOS.workflow()
 def bench_workflow(num: int) -> list:
     output = []
-    for i in range(num):
-        fact: UselessFact = retrieve_fact()
-        count = save_fact(fact['id'], fact['text'])
-        output.append({"id": fact['id'], "fact": fact['text'], "count": count})
+    for _ in range(num):
+        name = retrieve_name()
+        greeting = save_greeting(name)
+        output.append({"name": name, "greeting": greeting})
 
     return output
 
 # async workflow
 @DBOS.workflow()
-async def async_bench_workflow(num: int) -> list:
+async def bench_workflow_async(num: int) -> list:
     output = []
-    for i in range(num):
-        fact: UselessFact = await retrieve_fact_async()
-        count = save_fact(fact['id'], fact['text'])
-        output.append({"id": fact['id'], "fact": fact['text'], "count": count})
+    for _ in range(num):
+        name = await retrieve_name_async()
+        greeting = save_greeting(name)
+        output.append({"name": name, "greeting": greeting})
 
     return output
+
 
 @contextmanager
 def disable_gc():
@@ -105,20 +123,19 @@ def disable_gc():
 def handler_step(num: int):
     with disable_gc():
         start = time.perf_counter_ns()
-        output = retrieve_fact()
+        output = retrieve_name()
         end = time.perf_counter_ns()
         elapsed = end - start
         return {"output": output, "runtime": elapsed}
 
 @app.get("/async-step/{num}")
-async def async_handler_step(num: int):
+async def handler_step_async(num: int):
     with disable_gc():
         start = time.perf_counter_ns()
-        
-        fact: UselessFact = await retrieve_fact_async()
+        output = await retrieve_name_async()
         end = time.perf_counter_ns()
         elapsed = end - start
-        return {"output": fact, "runtime": elapsed}
+        return {"output": output, "runtime": elapsed}
 
 @app.get("/wf/{num}")
 def handler_workflow(num: int):
@@ -130,11 +147,34 @@ def handler_workflow(num: int):
         return {"output": output, "runtime": elapsed}
 
 @app.get("/async-wf/{num}")
-async def async_handler_workflow(num: int):
+async def handler_workflow_async(num: int):
     with disable_gc():
         start = time.perf_counter_ns()
-        output = await async_bench_workflow(int(num))
+        output = await bench_workflow_async(int(num))
         end = time.perf_counter_ns()
         elapsed = end - start
         return {"output": output, "runtime": elapsed}
 
+
+
+# Bare handler
+@app.get("/bare/{num}")
+def bare(num: int):
+    with disable_gc():
+        start = time.perf_counter_ns()
+        output = f"{random_name()}"
+        time.sleep(0.1)
+        end = time.perf_counter_ns()
+        elapsed = end - start
+        return {"output": output, "runtime": elapsed}
+
+# Async Bare handler
+@app.get("/async-bare/{num}")
+async def bare_async(num: int):
+    with disable_gc():
+        start = time.perf_counter_ns()
+        output = f"{random_name()}"
+        await asyncio.sleep(0.1)
+        end = time.perf_counter_ns()
+        elapsed = end - start
+        return {"output": output, "runtime": elapsed}
