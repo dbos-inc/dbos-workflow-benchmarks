@@ -13,7 +13,7 @@ database:
   port: 5432
   username: postgres
   password: ${PGPASSWORD}
-  app_db_name: dbos_py_benchmark_app_async
+  app_db_name: async_py_bench
   migrate:
     - alembic upgrade head
 telemetry:

@@ -28,6 +28,16 @@ def readme(num: int):
         elapsed = end - start
         return {"output": output, "runtime": elapsed}
 
+# Bare handler
+@app.get("/async-bare/{num}")
+async def readme_async(num: int):
+    with disable_gc():
+        start = time.perf_counter_ns()
+        output = f"hello world {num}!"
+        end = time.perf_counter_ns()
+        elapsed = end - start
+        return {"output": output, "runtime": elapsed}
+
 # Sync transaction
 @DBOS.transaction()
 def save_fact(id: str, fact: str) -> int:

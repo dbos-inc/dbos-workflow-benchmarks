@@ -5,7 +5,6 @@ from typing import TypedDict
 from fastapi import FastAPI
 from sqlalchemy.dialects.postgresql import insert
 import requests
-import aiohttp
 from dbos import DBOS
 import uvicorn
 
