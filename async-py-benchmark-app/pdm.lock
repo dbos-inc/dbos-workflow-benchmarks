@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:c5c6a317da179ebf9cfa3da906a2580dd05b099c25b4767eff1abbb6fc071ea8"
+content_hash = "sha256:479f929e35fae8fd24827a453fac1aa1bb20163e320ba4d94d753b219b23d662"
 
 [[metadata.targets]]
 requires_python = ">3.9"
@@ -331,9 +331,9 @@ files = [
 
 [[package]]
 name = "dbos"
-version = "0.16.0a23"
+version = "0.16.0a24"
 requires_python = ">=3.9"
-path = "./dbos-0.16.0a23+g6064e89-py3-none-any.whl"
+path = "./dbos-0.16.0a24+gac54132-py3-none-any.whl"
 summary = "Ultra-lightweight durable execution in Python"
 groups = ["default"]
 dependencies = [
@@ -353,7 +353,7 @@ dependencies = [
     "typing-extensions>=4.12.2; python_version < \"3.10\"",
 ]
 files = [
-    {file = "dbos-0.16.0a23+g6064e89-py3-none-any.whl", hash = "sha256:8b0ff40e35e742aa82e0bc409e555cf4dd82175a7d0b885de01e95f1f9f7ea4d"},
+    {file = "dbos-0.16.0a24+gac54132-py3-none-any.whl", hash = "sha256:15a1c2d9a2bb8ab5e8caa502f09d6c7bf3e5e8a0f9e992b0001b3fdeffab996d"},
 ]
 
 [[package]]
