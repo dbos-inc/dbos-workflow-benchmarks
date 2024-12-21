@@ -72,14 +72,11 @@ def retrieve_name() -> str:
 
 # Sync workflow
 @DBOS.workflow()
-def bench_workflow(num: int) -> list:
-    output = []
-    for _ in range(num):
-        name = retrieve_name()
-        greeting = save_greeting(name)
-        output.append({"name": name, "greeting": greeting})
+def bench_workflow(num: int) -> dict:
+    name = retrieve_name()
+    greeting = save_greeting(name)
+    return {"name": name, "greeting": greeting}
 
-    return output
 
 
 

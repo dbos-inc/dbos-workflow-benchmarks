@@ -87,25 +87,17 @@ async def retrieve_name_async() -> str:
 
 # Sync workflow
 @DBOS.workflow()
-def bench_workflow(num: int) -> list:
-    output = []
-    for _ in range(num):
-        name = retrieve_name()
-        greeting = save_greeting(name)
-        output.append({"name": name, "greeting": greeting})
-
-    return output
+def bench_workflow(num: int) -> dict:
+    name = retrieve_name()
+    greeting = save_greeting(name)
+    return {"name": name, "greeting": greeting}
 
 # async workflow
 @DBOS.workflow()
-async def bench_workflow_async(num: int) -> list:
-    output = []
-    for _ in range(num):
-        name = await retrieve_name_async()
-        greeting = save_greeting(name)
-        output.append({"name": name, "greeting": greeting})
-
-    return output
+async def bench_workflow_async(num: int) -> dict:
+    name = await retrieve_name_async()
+    greeting = save_greeting(name)
+    return {"name": name, "greeting": greeting}
 
 
 @contextmanager
